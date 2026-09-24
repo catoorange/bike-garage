@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ bike.brand }} {{ bike.model }}{% endblock %}
+{% block content %}
+<a href="/" class="muted">&larr; all bikes</a>
+<h1>{{ bike.brand }} {{ bike.model }}</h1>
+<p class="muted">
+  {% if b.year %}{{ bike.year }}{% endif %}
+  {% if bike.frame_size %}· {{ bike.frame_size }}{% endif %}
+  · stored in mm, display units come later (phase 6)
+</p>
+
+<section>
+  <h2>Frame baseline</h2>
+  <table class="geo">
+    <tr><th>Stack</th><td>{{ bike.stack or "—" }}</td></tr>
+    <tr><th>Reach</th><td>{{ bike.reach or "—" }}</td></tr>
+    <tr><th>Head tube angle</th><td>{{ bike.head_tube_angle or "—" }}</td></tr>
+    <tr><th>Seat tube angle</th><td>{{ bike.seat_tube_angle or "—" }}</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Installed parts</h2>
+  {% if not bike.installed_parts %}<p class="muted">Nothing installed yet.</p>{% endif %}
+  <ul class="cards">
+    {% for bp in bike.installed_parts %}
+    <li class="card">
+      <strong>{{ bp.part.name }}</strong> <span class="tag">{{ bp.part.ptype }}</span><br>
+      <small>
+        {% if bp.part.length %}length {{ bp.part.length }} · {% endif %}
+        {% if bp.part.angle %}angle {{ bp.part.angle }}° · {% endif %}
+        {% if bp.part.setback %}setback {{ bp.part.setback }}mm{% endif %}
+      </small>
+      <form method="post" action="/parts/{{ bp.part.id }}/remove" class="inline">
+        <input type="hidden" name="bike_id" value="{{ bike.id }}">
+        <button type="submit" class="linkbtn">remove</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section>
+  <h2>Add a part</h2>
+  <form method="post" action="/bikes/{{ bike.id }}/parts" class="grid">
+    <label>Custom name <input name="name" placeholder="my 80mm -17° stem" required></label>
+    <label>Type
+      <select name="ptype" required>
+        <option value="stem">stem</option>
+        <option value="bar">bar</option>
+        <option value="spacer_set">spacer set</option>
+        <option value="seatpost">seatpost</option>
+        <option value="crankset">crankset</option>
+        <option value="saddle">saddle</option>
+      </select>
+    </label>
+    <label>Length (mm) <input type="number" step="0.1" name="length"></label>
+    <label>Angle (°) <input type="number" step="0.1" name="angle"></label>
+    <label>Setback (mm) <input type="number" step="0.1" name="setback"></label>
+    <button type="submit">Install part</button>
+  </form>
+</section>
+{% endblock %}

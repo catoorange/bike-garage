@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+jinja2
+python-multipart
+passlib[bcrypt]
+bcrypt==4.0.1
+itsdangerous
+# bcrypt must be pinned to 4.0.1 above; passlib breaks with bcrypt>=4.1.
