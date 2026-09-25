@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Form, Request
+from fastapi import FastAPI, Depends, Form, Request, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -117,7 +117,19 @@ def bike_detail(
     svg = to_svg(bike, list(bike.installed_parts))   # NEW
     return templates.TemplateResponse(request, "bike_detail.html", {"bike": bike, "m": m, "svg": svg})  # add "svg"
 
-    
+
+@app.post("/bikes/{bike_id}/delete")
+def delete_bike(
+    bike_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    # filter on user_id too so someone can't delete another user's bike by guessing an id
+    bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == user.id).first()
+    if bike:
+        db.delete(bike)          # cascade removes its BikePart rows automatically
+        db.commit()
+    return RedirectResponse(url="/", status_code=302)
 
 @app.post("/bikes/{bike_id}/parts")
 def add_part_to_bike(
@@ -144,21 +156,39 @@ def add_part_to_bike(
 @app.get("/overlay")
 def overlay(
     request: Request,
-    bike: list[int] = [],                       # ?bike=1&bike=2 from the form checkboxes
+    bike: list[int] = Query(default=[]),         # now actually reads ?bike=...&bike=...                       # ?bike=1&bike=2  (the checked boxes)
+    stem_a: str | None = None,                  # "90,-17"
+    stem_b: str | None = None,                  # "60,+6"
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    bikes = db.query(Bike).filter(Bike.id.in_(bike), Bike.user_id == user.id).all() \
-        if bike else db.query(Bike).filter(Bike.user_id == user.id).all()
-    configs = [
-        {"bike": b, "parts": list(b.installed_parts), "label": f"{b.brand} {b.model}"}
-        for b in bikes
-    ]
+    from types import SimpleNamespace as NS
+
+    all_bikes = db.query(Bike).filter(Bike.user_id == user.id).all()          # every bike, to list as checkboxes
+    bikes = [b for b in all_bikes if not bike or b.id in bike]                # only the checked ones get drawn
+    selected_ids = {b.id for b in bikes}                                      # which boxes render as checked
+
+    def with_stem(bike_obj, spec, label):
+        L, A = (float(x) for x in spec.split(","))
+        parts = [bp for bp in bike_obj.installed_parts if bp.part.ptype != "stem"]
+        parts.append(NS(part=NS(ptype="stem", length=L, angle=A, weight_g=None), quantity=1))
+        return {"bike": bike_obj, "parts": parts, "label": f"{label} ({L}/{A}\u00b0)"}
+
+    configs = []
+    if len(bikes) == 1 and (stem_a or stem_b):
+        b = bikes[0]                                                          # SAME bike, ghosted twice
+        configs.append(with_stem(b, stem_a or "90,-17", "Setup A"))
+        if stem_b:
+            configs.append(with_stem(b, stem_b, "Setup B"))
+    else:
+        configs = [{"bike": b, "parts": list(b.installed_parts), "label": f"{b.brand} {b.model}"}
+                   for b in bikes]
+
     svg = render_overlay(configs)
     return templates.TemplateResponse(
-        request, "overlay.html", {"svg": svg, "all_bikes": db.query(Bike).filter(Bike.user_id == user.id).all()}
+        request, "overlay.html",
+        {"svg": svg, "all_bikes": all_bikes, "selected_ids": selected_ids},
     )
-
 
 @app.post("/parts/{part_id}/remove")
 def remove_part(

@@ -4,6 +4,10 @@
 <div class="page-head">
   <a href="/" class="crumb">&larr; All bikes</a>
   <h1>{{ bike.brand }} {{ bike.model }}</h1>
+  <form method="post" action="/bikes/{{ bike.id }}/delete" class="inline"
+      onsubmit="return confirm('Delete this bike and all its parts?');">
+  <button type="submit" class="linkbtn">Delete bike</button>
+</form>
   <div class="badges">
     {% if bike.year %}<span class="tag">{{ bike.year }}</span>{% endif %}
     {% if bike.frame_size %}<span class="tag">Size {{ bike.frame_size }}</span>{% endif %}
