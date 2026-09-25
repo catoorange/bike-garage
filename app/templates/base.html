@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>{% block title %}Bike Garage{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  {% set path = request.url.path %}
   <header class="topbar">
-    <a class="brand" href="/">🚲 Bike Garage</a>
+    <a class="brand" href="/"><span class="brand__glyph">🚲</span> Bike Garage</a>
     <nav>
-      <a href="/">My bikes</a>
+ <a href="/" {% if path == "/" or path.startswith("/bikes") %}aria-current="page"{% endif %}>My bikes</a>
       <form action="/logout" method="post" class="inline">
         <button type="submit" class="linkbtn">Log out</button>
       </form>
@@ -19,5 +21,6 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+  <footer class="foot"><span>Bike Garage — geometry &amp; fit, in mm</span><span>FastAPI · Jinja · no build step</span></footer>
 </body>
 </html>

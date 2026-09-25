@@ -1,21 +1,23 @@
 {% extends "base.html" %}
-{% block title %}{{ bike.brand }} {{ bike.model }}{% endblock %}
+{% block title %}{{ bike.brand }} {{ bike.model }} · Bike Garage{% endblock %}
 {% block content %}
-<a href="/" class="muted">&larr; all bikes</a>
-<h1>{{ bike.brand }} {{ bike.model }}</h1>
-<p class="muted">
-  {% if bike.year %}{{ bike.year }}{% endif %}
-  {% if bike.frame_size %}· {{ bike.frame_size }}{% endif %}
-  · stored in mm, display units come later (phase 6)
-</p>
+<div class="page-head">
+  <a href="/" class="crumb">&larr; All bikes</a>
+  <h1>{{ bike.brand }} {{ bike.model }}</h1>
+  <div class="badges">
+    {% if bike.year %}<span class="tag">{{ bike.year }}</span>{% endif %}
+    {% if bike.frame_size %}<span class="tag">Size {{ bike.frame_size }}</span>{% endif %}
+    <span class="tag">stored in mm</span>
+  </div>
+</div>
 
 <section>
   <h2>Frame baseline</h2>
   <table class="geo">
-    <tr><th>Stack</th><td>{{ bike.stack or "—" }}</td></tr>
-    <tr><th>Reach</th><td>{{ bike.reach or "—" }}</td></tr>
-    <tr><th>Head tube angle</th><td>{{ bike.head_tube_angle or "—" }}</td></tr>
-    <tr><th>Seat tube angle</th><td>{{ bike.seat_tube_angle or "—" }}</td></tr>
+    <tr><th>Stack</th><td>{{ bike.stack or "—" }}{% if bike.stack %} mm{% endif %}</td></tr>
+    <tr><th>Reach</th><td>{{ bike.reach or "—" }}{% if bike.reach %} mm{% endif %}</td></tr>
+    <tr><th>Head tube angle</th><td>{{ bike.head_tube_angle or "—" }}{% if bike.head_tube_angle %}°{% endif %}</td></tr>
+    <tr><th>Seat tube angle</th><td>{{ bike.seat_tube_angle or "—" }}{% if bike.seat_tube_angle %}°{% endif %}</td></tr>
   </table>
 </section>
 
@@ -25,16 +27,14 @@
   <ul class="cards">
     {% for bp in bike.installed_parts %}
     <li class="card">
-      <strong>{{ bp.part.name }}</strong> <span class="tag">{{ bp.part.ptype }}</span><br>
-      <small>
-        {% if bp.part.length %}length {{ bp.part.length }} · {% endif %}
-        {% if bp.part.angle %}angle {{ bp.part.angle }}° · {% endif %}
-        {% if bp.part.setback %}setback {{ bp.part.setback }}mm{% endif %}
+      <div class="bike-card__title"><span class="avatar">{{ bp.part.ptype[0]|upper }}</span>
+        <div><strong>{{ bp.part.name }}</strong><br><span class="tag">{{ bp.part.ptype }}</span></div>
+      </div>
+      <small class="muted" style="display:block;margin-top:10px">
+        {% if bp.part.length %}{{ bp.part.length }} mm · {% endif %}
+        {% if bp.part.angle %}{{ bp.part.angle }}° · {% endif %}
+        {% if bp.part.setback %}setback {{ bp.part.setback }} mm{% endif %}
       </small>
-      <form method="post" action="/parts/{{ bp.part.id }}/remove" class="inline">
-        <input type="hidden" name="bike_id" value="{{ bike.id }}">
-        <button type="submit" class="linkbtn">remove</button>
-      </form>
     </li>
     {% endfor %}
   </ul>
@@ -46,18 +46,15 @@
     <label>Custom name <input name="name" placeholder="my 80mm -17° stem" required></label>
     <label>Type
       <select name="ptype" required>
-        <option value="stem">stem</option>
-        <option value="bar">bar</option>
-        <option value="spacer_set">spacer set</option>
-        <option value="seatpost">seatpost</option>
-        <option value="crankset">crankset</option>
-        <option value="saddle">saddle</option>
+        <option value="stem">stem</option><option value="bar">bar</option>
+        <option value="spacer_set">spacer set</option><option value="seatpost">seatpost</option>
+        <option value="crankset">crankset</option><option value="saddle">saddle</option>
       </select>
     </label>
     <label>Length (mm) <input type="number" step="0.1" name="length"></label>
     <label>Angle (°) <input type="number" step="0.1" name="angle"></label>
     <label>Setback (mm) <input type="number" step="0.1" name="setback"></label>
-    <button type="submit">Install part</button>
+    <button class="full" type="submit">Install part</button>
   </form>
 </section>
 {% endblock %}

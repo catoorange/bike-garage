@@ -1,63 +1,184 @@
-{% extends "base.html" %}
-{% block title %}{{ bike.brand }} {{ bike.model }}{% endblock %}
-{% block content %}
-<a href="/" class="muted">&larr; all bikes</a>
-<h1>{{ bike.brand }} {{ bike.model }}</h1>
-<p class="muted">
-  {% if b.year %}{{ bike.year }}{% endif %}
-  {% if bike.frame_size %}· {{ bike.frame_size }}{% endif %}
-  · stored in mm, display units come later (phase 6)
-</p>
+/* =====================================================================
+   Bike Garage — design system
+   Pure CSS, no build step. Styles every class your Jinja templates use:
+   .topbar .brand .container .cards .card .tag .muted .error .inline
+   .linkbtn table.geo form.grid  + a few new hooks (.page-head, .field,
+   .bike-card, .auth-card) used by the updated templates.
+   Light + dark auto (prefers-color-scheme). Accent kept on-brand (red).
+   ===================================================================== */
 
-<section>
-  <h2>Frame baseline</h2>
-  <table class="geo">
-    <tr><th>Stack</th><td>{{ bike.stack or "—" }}</td></tr>
-    <tr><th>Reach</th><td>{{ bike.reach or "—" }}</td></tr>
-    <tr><th>Head tube angle</th><td>{{ bike.head_tube_angle or "—" }}</td></tr>
-    <tr><th>Seat tube angle</th><td>{{ bike.seat_tube_angle or "—" }}</td></tr>
-  </table>
-</section>
+:root {
+  color-scheme: light;
 
-<section>
-  <h2>Installed parts</h2>
-  {% if not bike.installed_parts %}<p class="muted">Nothing installed yet.</p>{% endif %}
-  <ul class="cards">
-    {% for bp in bike.installed_parts %}
-    <li class="card">
-      <strong>{{ bp.part.name }}</strong> <span class="tag">{{ bp.part.ptype }}</span><br>
-      <small>
-        {% if bp.part.length %}length {{ bp.part.length }} · {% endif %}
-        {% if bp.part.angle %}angle {{ bp.part.angle }}° · {% endif %}
-        {% if bp.part.setback %}setback {{ bp.part.setback }}mm{% endif %}
-      </small>
-      <form method="post" action="/parts/{{ bp.part.id }}/remove" class="inline">
-        <input type="hidden" name="bike_id" value="{{ bike.id }}">
-        <button type="submit" class="linkbtn">remove</button>
-      </form>
-    </li>
-    {% endfor %}
-  </ul>
-</section>
+  --bg:        #f6f7f9;
+  --surface:   #ffffff;
+  --surface-2: #fbfbfc;
+  --fg:        #10151f;
+  --muted:     #5b6472;
+  --line:      #e6e8ee;
+  --line-strong:#d3d7e0;
 
-<section>
-  <h2>Add a part</h2>
-  <form method="post" action="/bikes/{{ bike.id }}/parts" class="grid">
-    <label>Custom name <input name="name" placeholder="my 80mm -17° stem" required></label>
-    <label>Type
-      <select name="ptype" required>
-        <option value="stem">stem</option>
-        <option value="bar">bar</option>
-        <option value="spacer_set">spacer set</option>
-        <option value="seatpost">seatpost</option>
-        <option value="crankset">crankset</option>
-        <option value="saddle">saddle</option>
-      </select>
-    </label>
-    <label>Length (mm) <input type="number" step="0.1" name="length"></label>
-    <label>Angle (°) <input type="number" step="0.1" name="angle"></label>
-    <label>Setback (mm) <input type="number" step="0.1" name="setback"></label>
-    <button type="submit">Install part</button>
-  </form>
-</section>
-{% endblock %}
+  --accent:       #d6192e;          /* performance red, on-brand */
+  --accent-soft:  #fdecee;
+  --accent-fg:    #ffffff;
+
+  --ring: rgba(214, 25, 46, .35);
+  --shadow-sm: 0 1px 2px rgba(16,21,31,.06), 0 1px 3px rgba(16,21,31,.05);
+  --shadow-md: 0 6px 24px rgba(16,21,31,.10), 0 2px 8px rgba(16,21,31,.06);
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --maxw: 920px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0b0e15;
+    --surface:   #131822;
+    --surface-2: #0f141d;
+    --fg:        #eef1f6;
+    --muted:     #9aa6ba;
+    --line:      #232b3a;
+    --line-strong:#2f3a4d;
+
+    --accent:      #ff5066;
+    --accent-soft: rgba(255, 80, 102, .14);
+    --ring: rgba(255, 80, 102, .40);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+    --shadow-md: 0 10px 34px rgba(0,0,0,.5);
+  }
+}
+
+/* --- reset / base ---------------------------------------------------- */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+  font-feature-settings: "cv02","cv03","cv04","ss01";
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a { color: inherit; }
+h1,h2,h3 { letter-spacing: -0.02em; font-weight: 700; line-height: 1.2; }
+
+/* --- top bar --------------------------------------------------------- */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px clamp(18px, 5vw, 40px);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-weight: 800; font-size: 1.06rem; text-decoration: none; letter-spacing: -.02em;
+}
+.brand__glyph {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px;
+  background: var(--accent-soft); color: var(--accent); font-size: 1rem;
+}
+.topbar nav { display: flex; align-items: center; gap: 4px; }
+.topbar nav a {
+  color: var(--muted); text-decoration: none; font-weight: 600; font-size: .92rem;
+  padding: 8px 13px; border-radius: 999px; transition: background .15s, color .15s;
+}
+.topbar nav a:hover { background: var(--surface-2); color: var(--fg); }
+.topbar nav a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+
+/* --- layout ---------------------------------------------------------- */
+.container { max-width: var(--maxw); margin: 0 auto; padding: clamp(24px, 5vw, 40px) 18px 80px; }
+.muted { color: var(--muted); }
+.error {
+  display: flex; gap: 9px; align-items: center;
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  padding: 11px 14px; border-radius: var(--radius-sm); font-weight: 600; margin: 0 0 18px;
+}
+.error::before { content: "⚠"; }
+
+/* --- page head ------------------------------------------------------- */
+.page-head { margin-bottom: 26px; }
+.page-head h1 { font-size: clamp(1.5rem, 4vw, 2rem); margin: 0 0 4px; }
+.page-head .crumb { display: inline-block; color: var(--muted); text-decoration: none; font-size: .88rem; font-weight: 600; margin-bottom: 10px; }
+.page-head .crumb:hover { color: var(--fg); }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+
+/* --- cards / grids --------------------------------------------------- */
+.cards { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.card {
+  position: relative; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 16px 17px; box-shadow: var(--shadow-sm);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.card a { text-decoration: none; }
+.bike-card:hover, .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--line-strong); }
+
+.bike-card__name { display: block; font-weight: 700; font-size: 1.02rem; }
+.avatar {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px;
+  background: var(--accent-soft); color: var(--accent); font-weight: 800; margin-bottom: 12px;
+}
+.bike-card__title { display: flex; gap: 12px; align-items: center; }
+
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--muted);
+  border-radius: 999px; padding: 2px 9px; font-size: .73rem; font-weight: 600; letter-spacing: .01em;
+}
+
+/* --- spec table ------------------------------------------------------ */
+section { margin-top: 34px; }
+section > h2 { font-size: 1.05rem; margin: 0 0 14px; display:flex; align-items:center; gap:8px; }
+section > h2::before { content:""; width: 6px; height: 16px; border-radius: 3px; background: var(--accent); }
+table.geo { border-collapse: collapse; width: 100%; max-width: 460px; font-size: .92rem; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+table.geo th, table.geo td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+table.geo tr:last-child th, table.geo tr:last-child td { border-bottom: 0; }
+table.geo tr:nth-child(odd) { background: var(--surface-2); }
+table.geo th { color: var(--muted); font-weight: 600; width: 48%; }
+table.geo td { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+
+/* --- forms ----------------------------------------------------------- */
+form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-top: 6px; }
+label { display: flex; flex-direction: column; font-size: .8rem; font-weight: 600; color: var(--muted); gap: 5px; }
+input, select {
+  padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  margin-top: 3px; font: inherit; font-size: .92rem; color: var(--fg);
+  background: var(--surface); width: 100%; transition: border-color .15s, box-shadow .15s;
+}
+input::placeholder { color: color-mix(in srgb, var(--muted) 70%, transparent); }
+input:focus-visible, select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
+
+button {
+  background: var(--accent); color: var(--accent-fg); border: 0; border-radius: var(--radius-sm);
+  padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer;
+  transition: filter .15s, transform .05s; align-self: start; margin-top: 18px;
+}
+button:hover { filter: brightness(1.07); } button:active { transform: translateY(1px); }
+button.full { grid-column: 1 / -1; width: max-content; }
+
+/* --- auth pages ------------------------------------------------------ */
+.auth-card { max-width: 380px; margin: 8vh auto 0; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow-md); }
+.auth-card h1 { text-align: center; font-size: 1.3rem; margin: 0 0 4px; }
+.auth-card .sub { text-align:center; color: var(--muted); margin: 0 0 22px; font-size:.9rem; }
+.auth-card form { display: grid; gap: 14px; }
+.auth-card button { width: 100%; margin-top: 6px; }
+.auth-card .switch { text-align: center; margin-top: 18px; font-size: .88rem; color: var(--muted); }
+.auth-card .switch a { color: var(--accent); font-weight: 700; text-decoration: none; }
+
+/* --- inline / link buttons (the little remove buttons) --------------- */
+.inline { display: inline; margin: 0; }
+.linkbtn { background: none; color: var(--muted); padding: 0; margin: 0; font-size: .8rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; align-self: auto; }
+.linkbtn:hover { color: var(--accent); filter: none; }
+
+/* --- footer ---------------------------------------------------------- */
+.foot { max-width: var(--maxw); margin: 0 auto; padding: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .82rem; display:flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }

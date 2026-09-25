@@ -1,27 +1,40 @@
 {% extends "base.html" %}
+{% block title %}My bikes · Bike Garage{% endblock %}
 {% block content %}
-<h1>My bikes</h1>
-{% if not bikes %}<p class="muted">No bikes yet. Add one below.</p>{% endif %}
-<ul class="cards">
-  {% for b in bikes %}
-  <li class="card">
-    <a href="/bikes/{{ b.id }}">
-      <strong>{{ b.brand }} {{ b.model }}</strong>
-      {% if b.year %}<span class="muted">{{ b.year }}</span>{% endif %}
-      {% if b.frame_size %}<span class="tag">{{ b.frame_size }}</span>{% endif %}
-    </a>
-  </li>
-  {% endfor %}
-</ul>
+<div class="page-head">
+  <h1>My bikes</h1>
+  <p class="muted" style="margin:0">{{ bikes|length }} build{{ "s" if bikes|length != 1 else "" }} · all dimensions stored in mm</p>
+</div>
 
-<h2>Add a bike</h2>
-<form method="post" action="/bikes" class="grid">
-  <label>Brand <input name="brand" required></label>
-  <label>Model <input name="model" required></label>
-  <label>Year <input type="number" name="year"></label>
-  <label>Frame size <input name="frame_size"></label>
-  <label>Stack (mm) <input type="number" step="0.1" name="stack"></label>
-  <label>Reach (mm) <input type="number" step="0.1" name="reach"></label>
-  <button type="submit">Save bike</button>
-</form>
+{% if not bikes %}
+  <p class="muted">No bikes yet. Add your first one below.</p>
+{% else %}
+  <ul class="cards">
+    {% for b in bikes %}
+    <li>
+      <a class="card bike-card" href="/bikes/{{ b.id }}" style="display:block">
+        <span class="avatar">{{ (b.brand ~ " " ~ b.model)|trim }}</span>
+        <strong class="bike-card__name">{{ b.brand }} {{ b.model }}</strong>
+        <div class="badges">
+          {% if b.year %}<span class="tag">{{ b.year }}</span>{% endif %}
+          {% if b.frame_size %}<span class="tag">Size {{ b.frame_size }}</span>{% endif %}
+        </div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<section>
+  <h2>Add a bike</h2>
+  <form method="post" action="/bikes" class="grid">
+    <label>Brand <input name="brand" required></label>
+    <label>Model <input name="model" required></label>
+    <label>Year <input type="number" name="year"></label>
+    <label>Frame size <input name="frame_size" placeholder="M / 54cm…"></label>
+    <label>Stack (mm) <input type="number" step="0.1" name="stack"></label>
+    <label>Reach (mm) <input type="number" step="0.1" name="reach"></label>
+    <button class="full" type="submit">Save bike</button>
+  </form>
+</section>
 {% endblock %}
