@@ -9,6 +9,8 @@ from app.db import Base, engine, get_db
 from app.models import User, Bike, Part, BikePart
 from app.auth import hash_password, verify_password, get_current_user, NotAuthenticated
 from app.geometry import fit_metrics
+from app.render import to_svg
+
 
 app = FastAPI(title="Bike Garage")
 app.add_middleware(
@@ -111,8 +113,10 @@ def bike_detail(
     if not bike:
         return RedirectResponse(url="/", status_code=302)
     m = fit_metrics(bike, list(bike.installed_parts))
-    return templates.TemplateResponse(request, "bike_detail.html", {"bike": bike, "m": m})
+    svg = to_svg(bike, list(bike.installed_parts))   # NEW
+    return templates.TemplateResponse(request, "bike_detail.html", {"bike": bike, "m": m, "svg": svg})  # add "svg"
 
+    
 
 @app.post("/bikes/{bike_id}/parts")
 def add_part_to_bike(
@@ -122,8 +126,10 @@ def add_part_to_bike(
     user: User = Depends(get_current_user), db: Session = Depends(get_db),
 ):
     bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == user.id).first()
-    if not bike:
-        return RedirectResponse(url="/", status_code=302)
+    for bp in bike.installed_parts:
+        if bp.part.ptype == ptype:
+            db.delete(bp)
+    db.commit()
     part = Part(
         user_id=user.id, name=name, ptype=ptype,
         length=length, angle=angle, setback=setback, weight_g=weight_g,

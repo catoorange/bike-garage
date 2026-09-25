@@ -21,7 +21,7 @@ def bar_center(bike, installed) -> tuple[float, float]:
     if not stem or stem.angle is None:
         return (hx, hy)
     rad = math.radians(stem.angle)
-    dx = -stem.length * math.cos(rad)      # backward toward rider
+    dx = stem.length * math.cos(rad)      # forward away from rider
     dy = stem.length * math.sin(rad)       # + rise / - drop
     return (hx + dx, hy + dy)
 
