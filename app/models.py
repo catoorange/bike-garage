@@ -40,6 +40,12 @@ class Bike(Base):
     seat_tube_angle: Mapped[float | None] = mapped_column(Float, nullable=True)
     chainstay_length: Mapped[float | None] = mapped_column(Float, nullable=True)
 
+    #jon added 09-24
+    saddle_height: Mapped[float | None] = mapped_column(Float, nullable=True)   # BB -> top of saddle (rider setting)
+    seat_tube_length: Mapped[float | None] = mapped_column(Float, nullable=True) # frame dim (for standover later)
+    total_weight: Mapped[float | None] = mapped_column(Float, nullable=True)  # g, overall bike weight
+    #
+
     owner: Mapped["User"] = relationship(back_populates="bikes")
     installed_parts: Mapped[list["BikePart"]] = relationship(
         cascade="all, delete-orphan", back_populates="bike"
@@ -65,6 +71,8 @@ class Part(Base):
     quantity: Mapped[int] = mapped_column(Integer, default=1)               # spacer count etc.
     extra: Mapped[dict | None] = mapped_column(JSON, nullable=True)          # catch-all for odd dims
 
+    #jon added 09-24
+    weight_g: Mapped[float | None] = mapped_column(Float, nullable=True)        # mass of this part
 
 class BikePart(Base):
     """Join table: which part is installed on which bike, where, and how many."""

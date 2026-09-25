@@ -41,6 +41,21 @@
 </section>
 
 <section>
+  <h2>Fit &amp; weight (live)</h2>
+  <table class="geo">
+    <tr><th>Head tube angle</th><td>{{ bike.head_tube_angle or "—" }}°</td></tr>
+    <tr><th>Seat tube angle</th><td>{{ bike.seat_tube_angle or "—" }}°</td></tr>
+    <tr><th>Saddle height</th><td>{{ m.saddle_height or "—" }} mm</td></tr>
+    <tr><th>Cockpit reach</th><td>{{ m.cockpit_reach }} mm</td></tr>
+    <tr><th>Bar height above BB</th><td>{{ m.bar_y }} mm</td></tr>
+    <tr><th>Saddle-to-bar drop</th><td>{{ m.cockpit_drop if m.cockpit_drop is not none else "—" }} mm</td></tr>
+    <tr><th>Crank length</th><td>{{ m.crank_length or "—" }} mm</td></tr>
+    <tr><th>Pedal spindle below BB</th><td>{{ m.pedal_below_bb or "—" }} mm</td></tr>
+    <tr><th>Total bike weight</th><td>{{ m.total_weight or "—" }} g</td></tr>
+  </table>
+</section>
+
+<section>
   <h2>Add a part</h2>
   <form method="post" action="/bikes/{{ bike.id }}/parts" class="grid">
     <label>Custom name <input name="name" placeholder="my 80mm -17° stem" required></label>
@@ -54,6 +69,7 @@
     <label>Length (mm) <input type="number" step="0.1" name="length"></label>
     <label>Angle (°) <input type="number" step="0.1" name="angle"></label>
     <label>Setback (mm) <input type="number" step="0.1" name="setback"></label>
+    <label>Weight (g) (optional) <input type="number" step="0.1" name="weight_g"></label>
     <button class="full" type="submit">Install part</button>
   </form>
 </section>

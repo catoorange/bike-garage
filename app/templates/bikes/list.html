@@ -18,6 +18,7 @@
         <div class="badges">
           {% if b.year %}<span class="tag">{{ b.year }}</span>{% endif %}
           {% if b.frame_size %}<span class="tag">Size {{ b.frame_size }}</span>{% endif %}
+          {% if b.total_weight %}<span class="tag">{{ "%.1f"|format(b.total_weight / 1000) }} kg</span>{% endif %}
         </div>
       </a>
     </li>
@@ -34,6 +35,11 @@
     <label>Frame size <input name="frame_size" placeholder="M / 54cm…"></label>
     <label>Stack (mm) <input type="number" step="0.1" name="stack"></label>
     <label>Reach (mm) <input type="number" step="0.1" name="reach"></label>
+    <label>Saddle height (mm) <input type="number" step="0.1" name="saddle_height"></label>
+    <label>Seat tube length (mm) <input type="number" step="0.1" name="seat_tube_length"></label>
+    <label>Head tube angle (°) <input type="number" step="0.1" name="head_tube_angle"></label>
+    <label>Seat tube angle (°) <input type="number" step="0.1" name="seat_tube_angle"></label>
+    <label>Total bike weight (g) <input type="number" step="1" name="total_weight"></label>
     <button class="full" type="submit">Save bike</button>
   </form>
 </section>
