@@ -12,7 +12,7 @@
   <header class="topbar">
     <a class="brand" href="/"><span class="brand__glyph">🚲</span> Bike Garage</a>
     <nav>
- <a href="/" {% if path == "/" or path.startswith("/bikes") %}aria-current="page"{% endif %}>My bikes</a>
+ <a href="/" {% if path == "/" or path.startswith("/bikes") %}aria-current="page"{% endif %}>My bikes</a><a href="/overlay">Compare</a>
       <form action="/logout" method="post" class="inline">
         <button type="submit" class="linkbtn">Log out</button>
       </form>

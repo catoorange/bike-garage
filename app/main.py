@@ -10,6 +10,7 @@ from app.models import User, Bike, Part, BikePart
 from app.auth import hash_password, verify_password, get_current_user, NotAuthenticated
 from app.geometry import fit_metrics
 from app.render import to_svg
+from app.render_overlay import render_overlay
 
 
 app = FastAPI(title="Bike Garage")
@@ -138,6 +139,25 @@ def add_part_to_bike(
     db.add(BikePart(bike_id=bike.id, part_id=part.id, quantity=1))
     db.commit()
     return RedirectResponse(url=f"/bikes/{bike_id}", status_code=302)
+
+
+@app.get("/overlay")
+def overlay(
+    request: Request,
+    bike: list[int] = [],                       # ?bike=1&bike=2 from the form checkboxes
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    bikes = db.query(Bike).filter(Bike.id.in_(bike), Bike.user_id == user.id).all() \
+        if bike else db.query(Bike).filter(Bike.user_id == user.id).all()
+    configs = [
+        {"bike": b, "parts": list(b.installed_parts), "label": f"{b.brand} {b.model}"}
+        for b in bikes
+    ]
+    svg = render_overlay(configs)
+    return templates.TemplateResponse(
+        request, "overlay.html", {"svg": svg, "all_bikes": db.query(Bike).filter(Bike.user_id == user.id).all()}
+    )
 
 
 @app.post("/parts/{part_id}/remove")

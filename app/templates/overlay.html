@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Compare{% endblock %}
+{% block content %}
+<a href="/" class="muted">&larr; all bikes</a>
+<h1>Overlay</h1>
+<p class="muted">Select bikes to ghost them on one shared coordinate system. Same scale for all — that's what makes the comparison honest.</p>
+
+<form method="get" action="/overlay" class="grid" style="max-width:360px">
+  {% for b in all_bikes %}
+  <label><input type="checkbox" name="bike" value="{{ b.id }}"
+    {{ "checked" if not selected_ids or b.id in selected_ids }}> {{ b.brand }} {{ b.model }}</label>
+  {% endfor %}
+  <button type="submit">Compare selected</button>
+</form>
+
+<section>{{ svg | safe }}</section>
+{% endblock %}
