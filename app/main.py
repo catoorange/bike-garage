@@ -107,15 +107,20 @@ def create_bike(
 
 @app.get("/bikes/{bike_id}")
 def bike_detail(
-    bike_id: int, request: Request,
-    user: User = Depends(get_current_user), db: Session = Depends(get_db),
+    bike_id: int,                                   # no default — MUST come first
+    request: Request,                               # no default
+    bg: str = "light",                              # default → must come AFTER the two above
+    user: User = Depends(get_current_user),          # has default
+    db: Session = Depends(get_db),                   # has default
 ):
     bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == user.id).first()
     if not bike:
         return RedirectResponse(url="/", status_code=302)
     m = fit_metrics(bike, list(bike.installed_parts))
-    svg = to_svg(bike, list(bike.installed_parts))   # NEW
-    return templates.TemplateResponse(request, "bike_detail.html", {"bike": bike, "m": m, "svg": svg})  # add "svg"
+    svg = to_svg(bike, list(bike.installed_parts), bg=bg)
+    return templates.TemplateResponse(
+        request, "bike_detail.html", {"bike": bike, "m": m, "svg": svg}
+    )
 
 
 @app.post("/bikes/{bike_id}/delete")
@@ -159,6 +164,7 @@ def overlay(
     bike: list[int] = Query(default=[]),         # now actually reads ?bike=...&bike=...                       # ?bike=1&bike=2  (the checked boxes)
     stem_a: str | None = None,                  # "90,-17"
     stem_b: str | None = None,                  # "60,+6"
+    bg: str = "dark",
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -184,7 +190,7 @@ def overlay(
         configs = [{"bike": b, "parts": list(b.installed_parts), "label": f"{b.brand} {b.model}"}
                    for b in bikes]
 
-    svg = render_overlay(configs)
+    svg = render_overlay(configs, bg=bg)         # was render_overlay(configs); now honors bg
     return templates.TemplateResponse(
         request, "overlay.html",
         {"svg": svg, "all_bikes": all_bikes, "selected_ids": selected_ids},
@@ -192,10 +198,19 @@ def overlay(
 
 @app.post("/parts/{part_id}/remove")
 def remove_part(
-    part_id: int, bike_id: int = Form(...),
-    user: User = Depends(get_current_user), db: Session = Depends(get_db),
+    part_id: int,
+    bike_id: int = Form(...),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    bp = db.query(BikePart).filter(BikePart.part_id == part_id, BikePart.bike_id == bike_id).first()
+    bp = db.query(BikePart).filter(
+        BikePart.part_id == part_id, BikePart.bike_id == bike_id
+    ).first()
     if bp:
+        part = bp.part
         db.delete(bp); db.commit()
+        # if no other bike links this part anymore, delete the orphaned Part row too
+        still_linked = db.query(BikePart).filter(BikePart.part_id == part.id).count()
+        if not still_linked:
+            db.delete(part); db.commit()
     return RedirectResponse(url=f"/bikes/{bike_id}", status_code=302)

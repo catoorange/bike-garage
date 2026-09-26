@@ -5,11 +5,19 @@
 <h1>Overlay</h1>
 <p class="muted">Pick bikes to ghost them on one shared coordinate system. One scale for everything — that's what makes the compare honest.</p>
 
-<form method="get" action="/overlay" class="grid" style="max-width:360px">
+<form method="get" action="/overlay" class="grid" style="max-width:420px;align-items:end">
   {% for b in all_bikes %}
   <label><input type="checkbox" name="bike" value="{{ b.id }}"
     {{ "checked" if b.id in selected_ids }}> {{ b.brand }} {{ b.model }}</label>
   {% endfor %}
+
+  <label>View
+    <select name="bg" onchange="this.form.submit()">
+      <option value="light" {{ "selected" if bg == "light" }}>Light</option>
+      <option value="dark"  {{ "selected" if bg == "dark"  }}>Dark</option>
+      <option value="grid"  {{ "selected" if bg == "grid"  }}>Grid (50mm)</option>
+    </select>
+  </label>
   <button type="submit">Compare selected</button>
 </form>
 

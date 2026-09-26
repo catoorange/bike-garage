@@ -15,6 +15,8 @@
   </div>
 </div>
 
+
+
 <section>
   <h2>Frame baseline</h2>
   <table class="geo">
@@ -30,17 +32,20 @@
   {% if not bike.installed_parts %}<p class="muted">Nothing installed yet.</p>{% endif %}
   <ul class="cards">
     {% for bp in bike.installed_parts %}
-    <li class="card">
-      <div class="bike-card__title"><span class="avatar">{{ bp.part.ptype[0]|upper }}</span>
-        <div><strong>{{ bp.part.name }}</strong><br><span class="tag">{{ bp.part.ptype }}</span></div>
-      </div>
-      <small class="muted" style="display:block;margin-top:10px">
-        {% if bp.part.length %}{{ bp.part.length }} mm · {% endif %}
-        {% if bp.part.angle %}{{ bp.part.angle }}° · {% endif %}
-        {% if bp.part.setback %}setback {{ bp.part.setback }} mm{% endif %}
-      </small>
-    </li>
-    {% endfor %}
+<li class="card">
+  <strong>{{ bp.part.name }}</strong> <span class="tag">{{ bp.part.ptype }}</span><br>
+  <small>
+    {% if bp.part.length %}length {{ bp.part.length }} · {% endif %}
+    {% if bp.part.angle %}angle {{ bp.part.angle }}° · {% endif %}
+    {% if bp.part.setback %}setback {{ bp.part.setback }}mm · {% endif %}
+    {% if bp.quantity %}×{{ bp.quantity }}{% endif %}
+  </small>
+  <form method="post" action="/parts/{{ bp.part.id }}/remove" class="inline">
+    <input type="hidden" name="bike_id" value="{{ bike.id }}">
+    <button type="submit" class="linkbtn">remove</button>   <!-- <- this is the delete -->
+  </form>
+</li>
+{% endfor %}
   </ul>
 </section>
 
@@ -78,8 +83,19 @@
   </form>
 </section>
 
+
 <section>
+    
   <h2>Side profile</h2>
+  <form method="get" action="/bikes/{{ bike.id }}" class="inline">
+  <label>View
+    <select name="bg" onchange="this.form.submit()">
+      <option value="light" {{ "selected" if request.query_params.get("bg","light")=="light" }}>Light</option>
+      <option value="dark"  {{ "selected" if request.query_params.get("bg")=="dark" }}>Dark</option>
+      <option value="grid"  {{ "selected" if request.query_params.get("bg")=="grid" }}>Grid (50mm)</option>
+    </select>
+  </label>
+</form>
   <div class="profile">{{ svg | safe }}</div>
 </section>
 {% endblock %}
