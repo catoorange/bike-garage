@@ -1,24 +1,20 @@
+import os
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
-from typing import Generator
 
-# Creates bike_garage.db automatically on first run. Swap the URL for Postgres later.
-DATABASE_URL = "sqlite:///./bike_garage.db"
+DB_PATH = Path(os.environ.get("BG_DB_PATH", "/var/lib/bike-garage/bike_garage.db"))
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
 
 class Base(DeclarativeBase):
     pass
 
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,  # set True to watch generated SQL while learning
-    connect_args={"check_same_thread": False},  # required for SQLite + FastAPI threads
-)
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-
-
-def get_db() -> Generator[Session, None, None]:
-    """One DB session per request, closed when the request ends."""
+def get_db() -> Session:
     db = SessionLocal()
     try:
         yield db

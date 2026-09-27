@@ -16,7 +16,7 @@ from app.render_overlay import render_overlay
 app = FastAPI(title="Bike Garage")
 app.add_middleware(
     SessionMiddleware,
-    secret_key="change-me-in-prod-but-fine-for-learning",
+    secret_key=os.environ["BG_SECRET_KEY"],
     session_cookie="bg_session",
 )
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
