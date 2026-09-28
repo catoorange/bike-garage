@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, Form, Request, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
