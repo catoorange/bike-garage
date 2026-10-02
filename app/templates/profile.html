@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}My profile · Bike Garage{% endblock %}
+{% block content %}
+<div class="page-head">
+  <a href="/bikes" class="crumb">&larr; All bikes</a>
+  <h1>Rider profile</h1>
+  <p class="muted">Your body measurements, stored once and applied to every bike's fit display.</p>
+</div>
+
+<section style="max-width:240px;text-align:center;margin:0 auto 18px">
+  <h2>Profile photo</h2>
+  {% if avatar %}
+    <img src="/uploads/avatar/{{ avatar.stored_name }}" style="width:120px;height:120px;object-fit:cover;border-radius:50%;display:block;margin:0 auto 8px">
+  {% else %}
+    <div style="width:120px;height:120px;border-radius:50%;background:#2a2d35;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;color:#8b8fa3">no photo</div>
+  {% endif %}
+  <form method="post" action="/profile/avatar" enctype="multipart/form-data" style="display:flex;gap:8px;justify-content:center;align-items:center">
+    <input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" required style="font-size:12px;max-width:150px">
+    <button class="btn btn-primary" type="submit">{{ 'Replace' if avatar else 'Add photo' }}</button>
+  </form>
+</section>
+
+<section>
+  <h2>Measurements</h2>
+  <form method="post" action="/profile" class="grid">
+    <label>Overall height (mm)
+  <input type="number" step="0.1" name="height_mm" placeholder="e.g. 1780"
+         value="{{ '' if not r or r.height_mm is none else r.height_mm }}"></label>
+<label>Inseam (mm)
+  <input type="number" step="0.1" name="inseam_mm" placeholder="e.g. 830"
+         value="{{ '' if not r or r.inseam_mm is none else r.inseam_mm }}"></label>
+<label>Arm length (mm)
+  <input type="number" step="0.1" name="arm_length_mm" placeholder="e.g. 620"
+         value="{{ '' if not r or r.arm_length_mm is none else r.arm_length_mm }}"></label>
+<label>Torso length (mm)
+  <input type="number" step="0.1" name="torso_length_mm" placeholder="sit bone → neck, e.g. 610"
+         value="{{ '' if not r or r.torso_length_mm is none else r.torso_length_mm }}"></label>
+<label>Shoulder width (mm)
+  <input type="number" step="0.1" name="shoulder_width_mm" placeholder="for future fit, e.g. 420"
+         value="{{ '' if not r or r.shoulder_width_mm is none else r.shoulder_width_mm }}"></label>
+<label>Body weight (kg)
+  <input type="number" step="0.1" name="weight_kg" placeholder="e.g. 78"
+         value="{{ '' if not r or r.weight_kg is none else r.weight_kg }}"></label>
+    <button class="full" type="submit">Save profile</button>
+  </form>
+</section>
+{% endblock %}

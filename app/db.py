@@ -3,7 +3,8 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 
-DB_PATH = Path(os.environ.get("BG_DB_PATH", "/var/lib/bike-garage/bike_garage.db"))
+_DEFAULT = str(Path(__file__).resolve().parent.parent / "bike_garage.db")
+DB_PATH = Path(os.environ.get("BIKE_GARAGE_DB", _DEFAULT))
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})

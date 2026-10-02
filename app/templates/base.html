@@ -7,12 +7,20 @@
   <title>{% block title %}Bike Garage{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
+<script>
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  addEventListener('DOMContentLoaded', () => {
+    const y = +sessionStorage.getItem('sy'); sessionStorage.removeItem('sy');
+    if (y) requestAnimationFrame(() => scrollTo(0, y));
+  });
+</script>
+
 <body>
   {% set path = request.url.path %}
   <header class="topbar">
-    <a class="brand" href="/"><span class="brand__glyph">🚲</span> Bike Garage</a>
+    <a class="brand" href="/bikes"><span class="brand__glyph">🚲</span> Bike Garage</a>
     <nav>
- <a href="/" {% if path == "/" or path.startswith("/bikes") %}aria-current="page"{% endif %}>My bikes</a><a href="/overlay">Compare</a>
+ <a href="/bikes" {% if path == "/bikes" or path.startswith("/bikes") %}aria-current="page"{% endif %}>My bikes</a><a href="/overlay">Compare</a><a href="/gearing">Gearing</a> <a href="/profile">Profile</a>
       <form action="/logout" method="post" class="inline">
         <button type="submit" class="linkbtn">Log out</button>
       </form>

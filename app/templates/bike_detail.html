@@ -2,12 +2,12 @@
 {% block title %}{{ bike.brand }} {{ bike.model }} · Bike Garage{% endblock %}
 {% block content %}
 <div class="page-head">
-  <a href="/" class="crumb">&larr; All bikes</a>
+  <a href="/bikes" class="crumb">&larr; All bikes</a>
   <h1>{{ bike.brand }} {{ bike.model }}</h1>
   <form method="post" action="/bikes/{{ bike.id }}/delete" class="inline"
-      onsubmit="return confirm('Delete this bike and all its parts?');">
-  <button type="submit" class="linkbtn">Delete bike</button>
-</form>
+        onsubmit="return confirm('Delete this bike and all its parts?');">
+    <button type="submit" class="linkbtn">Delete bike</button>
+  </form>
   <div class="badges">
     {% if bike.year %}<span class="tag">{{ bike.year }}</span>{% endif %}
     {% if bike.frame_size %}<span class="tag">Size {{ bike.frame_size }}</span>{% endif %}
@@ -15,15 +15,65 @@
   </div>
 </div>
 
-
+<!-- ===== Gallery (ckpt6): banner + thumbnails + upload; sits ABOVE the Settings section ===== -->
+<section style="margin:0 0 18px">
+  {% if photos %}
+  <div style="height:150px;border-radius:10px;margin-bottom:10px;background:url('/uploads/gallery/{{ photos[0].stored_name }}') center/cover no-repeat"></div>
+  {% endif %}
+  <h2>Gallery</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:8px">
+    {% for p in photos %}
+    <figure style="margin:0;text-align:center">
+      <img src="/uploads/gallery/{{ p.stored_name }}" style="width:140px;height:100px;object-fit:cover;border-radius:8px;display:block">
+      <form method="post" action="/photos/{{ p.id }}/delete"><button type="submit" style="font-size:11px;cursor:pointer">✕</button></form>
+    </figure>
+    {% endfor %}
+  </div>
+  <form method="post" action="/bikes/{{ bike.id }}/photos" enctype="multipart/form-data" style="margin-top:10px;display:flex;gap:8px;align-items:center">
+    <input type="file" name="files" multiple accept=".jpg,.jpeg,.png,.webp,.gif" required>
+    <button type="submit">Upload</button>
+  </form>
+</section>
 
 <section>
-  <h2>Frame baseline</h2>
+  <h2>Settings</h2>
+  <form method="post" action="/bikes/{{ bike.id }}/geometry" class="grid">
+    <label>Stack (mm)
+      <input type="number" step="0.1" name="stack"
+             value="{{ '' if bike.stack is none else bike.stack }}"></label>
+    <label>Reach (mm)
+      <input type="number" step="0.1" name="reach"
+             value="{{ '' if bike.reach is none else bike.reach }}"></label>
+    <label>Head tube angle (°)
+      <input type="number" step="0.1" name="head_tube_angle"
+             value="{{ '' if bike.head_tube_angle is none else bike.head_tube_angle }}"></label>
+    <label>Seat tube angle (°)
+      <input type="number" step="0.1" name="seat_tube_angle"
+             value="{{ '' if bike.seat_tube_angle is none else bike.seat_tube_angle }}"></label>
+    <label>Saddle height (mm)
+      <input type="number" step="0.1" name="saddle_height"
+             value="{{ '' if bike.saddle_height is none else bike.saddle_height }}"></label>
+    <label>Total weight (g)
+      <input type="number" step="0.1" name="total_weight"
+             value="{{ '' if bike.total_weight is none else bike.total_weight }}"></label>
+    <button class="full" type="submit">Save</button>
+    <label>Wheel size (mm) <input type="number" step="1" name="wheel_size" placeholder="622"></label>
+    <label>BB drop (mm) <input type="number" step="0.1" name="bb_drop" placeholder="70"></label>
+    <label>Wheelbase (mm) <input type="number" step="0.1" name="wheelbase" placeholder="auto"></label>
+    <label>Crank length (mm)<input type="number" step="0.5" name="crank_length" value="{{ bike.crank_length or '' }}" placeholder="172.5"></label>
+    <label>Crank angle (°)<input type="number" step="1"   name="crank_angle"    value="{{ bike.crank_angle if bike.crank_angle is not none else '' }}" placeholder="270 = 6 o'clock"></label> 
+    
+  </form>
+</section>
+
+<section>
+  <h2>Derived fit metrics (live)</h2>
   <table class="geo">
-    <tr><th>Stack</th><td>{{ bike.stack or "—" }}{% if bike.stack %} mm{% endif %}</td></tr>
-    <tr><th>Reach</th><td>{{ bike.reach or "—" }}{% if bike.reach %} mm{% endif %}</td></tr>
-    <tr><th>Head tube angle</th><td>{{ bike.head_tube_angle or "—" }}{% if bike.head_tube_angle %}°{% endif %}</td></tr>
-    <tr><th>Seat tube angle</th><td>{{ bike.seat_tube_angle or "—" }}{% if bike.seat_tube_angle %}°{% endif %}</td></tr>
+    <tr><th>Cockpit reach</th><td>{{ m.cockpit_reach }} mm</td></tr>
+    <tr><th>Bar height above BB</th><td>{{ m.bar_y }} mm</td></tr>
+    <tr><th>Saddle-to-bar drop</th><td>{{ m.cockpit_drop if m.cockpit_drop is not none else "—" }} mm</td></tr>
+    <tr><th>Crank length</th><td>{{ m.crank_length or "—" }} mm</td></tr>
+    <tr><th>Pedal spindle below BB</th><td>{{ m.pedal_below_bb or "—" }} mm</td></tr>
   </table>
 </section>
 
@@ -32,36 +82,21 @@
   {% if not bike.installed_parts %}<p class="muted">Nothing installed yet.</p>{% endif %}
   <ul class="cards">
     {% for bp in bike.installed_parts %}
-<li class="card">
-  <strong>{{ bp.part.name }}</strong> <span class="tag">{{ bp.part.ptype }}</span><br>
-  <small>
-    {% if bp.part.length %}length {{ bp.part.length }} · {% endif %}
-    {% if bp.part.angle %}angle {{ bp.part.angle }}° · {% endif %}
-    {% if bp.part.setback %}setback {{ bp.part.setback }}mm · {% endif %}
-    {% if bp.quantity %}×{{ bp.quantity }}{% endif %}
-  </small>
-  <form method="post" action="/parts/{{ bp.part.id }}/remove" class="inline">
-    <input type="hidden" name="bike_id" value="{{ bike.id }}">
-    <button type="submit" class="linkbtn">remove</button>   <!-- <- this is the delete -->
-  </form>
-</li>
-{% endfor %}
+    <li class="card">
+      <strong>{{ bp.part.name }}</strong> <span class="tag">{{ bp.part.ptype }}</span><br>
+      <small>
+        {% if bp.part.length %}length {{ bp.part.length }} · {% endif %}
+        {% if bp.part.angle %}angle {{ bp.part.angle }}° · {% endif %}
+        {% if bp.part.setback %}setback {{ bp.part.setback }}mm · {% endif %}
+        {% if bp.quantity %}×{{ bp.quantity }}{% endif %}
+      </small>
+      <form method="post" action="/parts/{{ bp.part.id }}/remove" class="inline">
+        <input type="hidden" name="bike_id" value="{{ bike.id }}">
+        <button type="submit" class="linkbtn">remove</button>
+      </form>
+    </li>
+    {% endfor %}
   </ul>
-</section>
-
-<section>
-  <h2>Fit &amp; weight (live)</h2>
-  <table class="geo">
-    <tr><th>Head tube angle</th><td>{{ bike.head_tube_angle or "—" }}°</td></tr>
-    <tr><th>Seat tube angle</th><td>{{ bike.seat_tube_angle or "—" }}°</td></tr>
-    <tr><th>Saddle height</th><td>{{ m.saddle_height or "—" }} mm</td></tr>
-    <tr><th>Cockpit reach</th><td>{{ m.cockpit_reach }} mm</td></tr>
-    <tr><th>Bar height above BB</th><td>{{ m.bar_y }} mm</td></tr>
-    <tr><th>Saddle-to-bar drop</th><td>{{ m.cockpit_drop if m.cockpit_drop is not none else "—" }} mm</td></tr>
-    <tr><th>Crank length</th><td>{{ m.crank_length or "—" }} mm</td></tr>
-    <tr><th>Pedal spindle below BB</th><td>{{ m.pedal_below_bb or "—" }} mm</td></tr>
-    <tr><th>Total bike weight</th><td>{{ m.total_weight or "—" }} g</td></tr>
-  </table>
 </section>
 
 <section>
@@ -72,30 +107,38 @@
       <select name="ptype" required>
         <option value="stem">stem</option><option value="bar">bar</option>
         <option value="spacer_set">spacer set</option><option value="seatpost">seatpost</option>
-        <option value="crankset">crankset</option><option value="saddle">saddle</option>
+        <option value="saddle">saddle</option>
       </select>
     </label>
     <label>Length (mm) <input type="number" step="0.1" name="length"></label>
-    <label>Angle (°) <input type="number" step="0.1" name="angle"></label>
+    <label>Angle (°) <input type="number" step="1" name="angle"></label>
     <label>Setback (mm) <input type="number" step="0.1" name="setback"></label>
-    <label>Weight (g) (optional) <input type="number" step="0.1" name="weight_g"></label>
+    <label>Weight (g) (optional) <input type="number" step="1" name="weight_g"></label>
     <button class="full" type="submit">Install part</button>
   </form>
 </section>
 
-
 <section>
-    
   <h2>Side profile</h2>
   <form method="get" action="/bikes/{{ bike.id }}" class="inline">
+<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
   <label>View
-    <select name="bg" onchange="this.form.submit()">
-      <option value="light" {{ "selected" if request.query_params.get("bg","light")=="light" }}>Light</option>
-      <option value="dark"  {{ "selected" if request.query_params.get("bg")=="dark" }}>Dark</option>
-      <option value="grid"  {{ "selected" if request.query_params.get("bg")=="grid" }}>Grid (50mm)</option>
+    <select name="bg" onchange="sessionStorage.setItem('sy',scrollY);this.form.submit()">
+      <option value="dark"  {% if request.query_params.get("bg","dark")=="dark" %}selected{% endif %}>Dark</option>
+      <option value="light" {% if request.query_params.get("bg")=="light" %}selected{% endif %}>Light</option>
+      <option value="grid"  {% if request.query_params.get("bg")=="grid"  %}selected{% endif %}>Grid</option>
     </select>
   </label>
-</form>
+  <label><input type="checkbox" name="show_wheels" value="1"
+        onchange="sessionStorage.setItem('sy',scrollY);this.form.submit()"
+        {{ "checked" if request.query_params.get("show_wheels")=="1" }}> Wheels</label>
+  <label><input type="checkbox" name="show_rider" value="1"
+        onchange="sessionStorage.setItem('sy',scrollY);this.form.submit()"
+        {{ "checked" if request.query_params.get("show_rider")=="1" }}> Rider</label>
+</div>
+    
+    
+  </form>
   <div class="profile">{{ svg | safe }}</div>
 </section>
 {% endblock %}

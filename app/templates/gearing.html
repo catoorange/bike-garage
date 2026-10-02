@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<section style="max-width:760px;margin:24px auto;font-family:system-ui">
+  <h2 style="letter-spacing:.5px">⚙️ Gearing Calculator</h2>
+  <form method="get" action="/gearing" style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end">
+
+    <fieldset style="border:1px solid #333;border-radius:10px;padding:10px 14px">
+      <legend style="font-size:12px;color:#8b8fa3">Front rings (teeth — fill 1 or 2)</legend>
+      <div style="display:flex;gap:8px">
+        {% for k,ph in [("front_1","52"),("front_2","36")] %}
+        <label style="font-size:12px;text-align:center">Ring {{ loop.index }}
+          <input name="{{ k }}" type="number" min="20" max="60" style="width:64px"
+                 value="{{ request.query_params.get(k,'') }}" placeholder="{{ ph }}"></label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <fieldset style="border:1px solid #333;border-radius:10px;padding:10px 14px">
+      <legend style="font-size:12px;color:#8b8fa3">Rear cogs (teeth — fill up to 13, biggest first)</legend>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;max-width:460px">
+        {%- set defaults = [30,28,25,22,20,18,16,14,13,12,11,10,9] -%}
+        {% for i in range(1,14) %}
+        <label style="font-size:11px;text-align:center">c{{ i }}
+          <input name="{{ 'cog_' ~ i }}" type="number" min="8" max="50" style="width:58px;padding:4px 6px""
+                 value="{{ request.query_params.get('cog_' ~ i, '') }}" placeholder="{{ defaults[i-1] }}"></label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <label style="font-size:12px">Units
+  <select name="unit" onchange="sessionStorage.setItem('sy',scrollY);this.form.submit()">
+    <option value="metric"   {% if request.query_params.get('unit','') == 'metric' %}selected{% endif %}>km/h</option>
+    <option value="imperial" {% if request.query_params.get('unit','') == 'imperial' %}selected{% endif %}>mph</option>
+  </select>
+</label>
+
+    <label style="font-size:12px">Cadence (rpm)
+      <input type="number" name="cadence" value="{{ request.query_params.get('cadence','') }}"
+             placeholder="{{ cadence | round(0) | int }}" style="width:70px"></label>
+    <label style="font-size:12px">Wheel (ISO)
+      <input type="number" name="wheel_size" value="{{ request.query_params.get('wheel_size','') }}"
+             placeholder="622" style="width:70px"></label>
+    <button type="submit" style="background:#7c3aed;color:#fff;border:0;border-radius:8px;padding:9px 18px;cursor:pointer">Calculate</button>
+  </form>
+
+  <table style="width:100%;margin-top:22px;border-collapse:collapse;font-size:14px">
+    <tr style="color:#8b8fa3;text-align:left;font-size:12px">
+      <th style="padding:6px">Cog</th>
+      {% for f in front %}<th style="padding:6px">{{ 'Big' if loop.first and front|length==2 else ('Ring' if front|length==1 else 'Small') }} {{ f | round(0) | int }}T<br><span style="font-weight:400">ratio · {{ "mph" if unit == "imperial" else "km/h" }}</span></th>{% endfor %}
+    </tr>
+    {% for r in rows %}
+    <tr style="border-top:1px solid #2a2d35">
+      <td style="padding:6px;color:#c8102e;font-weight:600">{{ r.cog | round(0) | int }}T</td>
+      {% for i in range(front | length) %}
+      <td style="padding:6px">{{ r.ratios[i] }} · <b style="color:#a78bfa">{{ r.kmh[i] }}</b></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+  <p style="font-size:12px;color:#666">speed = cadence × (ring ÷ cog) × wheel circumference. {{ (cadence | round(0) | int) }} rpm shown — change it above.</p>
+</section>
+{% endblock %}

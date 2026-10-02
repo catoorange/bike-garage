@@ -4,6 +4,7 @@
 <div class="page-head">
   <h1>My bikes</h1>
   <p class="muted" style="margin:0">{{ bikes|length }} build{{ "s" if bikes|length != 1 else "" }} · all dimensions stored in mm</p>
+  <a href="/bikes/new" class="btn btn-primary">+ New bike day (create new)</a>
 </div>
 
 {% if not bikes %}
@@ -12,9 +13,10 @@
   <ul class="cards">
     {% for b in bikes %}
     <li>
-      <a class="card bike-card" href="/bikes/{{ b.id }}" style="display:block">
-        <span class="avatar">{{ (b.brand ~ " " ~ b.model)|trim }}</span>
-        <strong class="bike-card__name">{{ b.brand }} {{ b.model }}</strong>
+      {%- set cover = b.photos[0] if b.photos else None -%}
+      <a class="card bike-card" href="/bikes/{{ b.id }}"
+         style="display:block{% if cover %};background:url('/uploads/gallery/{{ cover.stored_name }}') center/cover no-repeat{% endif %}">
+        <span class="avatar" style="{% if cover %}background:rgba(10,10,14,.55);border-radius:8px;padding:6px 10px;display:inline-block;color:#fff{% endif %}">{{ (b.brand ~ " " ~ b.model)|trim }}</span>
         <div class="badges">
           {% if b.year %}<span class="tag">{{ b.year }}</span>{% endif %}
           {% if b.frame_size %}<span class="tag">Size {{ b.frame_size }}</span>{% endif %}
@@ -26,21 +28,4 @@
   </ul>
 {% endif %}
 
-<section>
-  <h2>Add a bike</h2>
-  <form method="post" action="/bikes" class="grid">
-    <label>Brand <input name="brand" required></label>
-    <label>Model <input name="model" required></label>
-    <label>Year <input type="number" name="year"></label>
-    <label>Frame size <input name="frame_size" placeholder="M / 54cm…"></label>
-    <label>Stack (mm) <input type="number" step="0.1" name="stack"></label>
-    <label>Reach (mm) <input type="number" step="0.1" name="reach"></label>
-    <label>Saddle height (mm) <input type="number" step="0.1" name="saddle_height"></label>
-    <label>Seat tube length (mm) <input type="number" step="0.1" name="seat_tube_length"></label>
-    <label>Head tube angle (°) <input type="number" step="0.1" name="head_tube_angle"></label>
-    <label>Seat tube angle (°) <input type="number" step="0.1" name="seat_tube_angle"></label>
-    <label>Total bike weight (g) <input type="number" step="1" name="total_weight"></label>
-    <button class="full" type="submit">Save bike</button>
-  </form>
-</section>
 {% endblock %}
