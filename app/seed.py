@@ -6,9 +6,15 @@ from app.db import SessionLocal
 from app.models import BikeModel
 
 
-def _f(v):  # optional float from CSV cell
-    v = (v or "").strip()
-    return float(v) if v else None
+import re
+
+def _f(v):
+    """Parse '110mm', '110 mm', '73', '1.5"' etc -> float."""
+    if not v:
+        return None
+    s = str(v).strip().lower().rstrip('"').replace("mm", "").replace("cm", "").strip()
+    m = re.search(r"-?\d+(\.\d+)?", s)
+    return float(m.group()) if m else None
 
 def _i(v):  # optional int from CSV cell
     v = (v or "").strip()
