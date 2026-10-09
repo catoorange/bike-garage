@@ -1,35 +1,43 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <meta property="og:image" content="https://bikegarage.backlightmarketing.com/static/card.png">
-  <title>{% block title %}Bike Garage{% endblock %}</title>
-  <link rel="stylesheet" href="/static/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta property="og:image" content="https://bikegarage.backlightmarketing.com/static/card.png">
+<title>{% block title %}Bike Garage{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <script>
-  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-  addEventListener('DOMContentLoaded', () => {
-    const y = +sessionStorage.getItem('sy'); sessionStorage.removeItem('sy');
-    if (y) requestAnimationFrame(() => scrollTo(0, y));
-  });
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+addEventListener('DOMContentLoaded', () => {
+  const y = +sessionStorage.getItem('sy'); sessionStorage.removeItem('sy');
+  if (y) requestAnimationFrame(() => scrollTo(0, y));
+});
 </script>
 
 <body>
   {% set path = request.url.path %}
-  <header class="topbar">
-    <a class="brand" href="/bikes"><span class="brand__glyph">🚲</span> Bike Garage</a>
-    <nav>
- <a href="/bikes" {% if path == "/bikes" or path.startswith("/bikes") %}aria-current="page"{% endif %}>My bikes</a><a href="/overlay">Compare</a><a href="/gearing">Gearing</a> <a href="/profile">Profile</a>
-      <form action="/logout" method="post" class="inline">
-        <button type="submit" class="linkbtn">Log out</button>
-      </form>
-    </nav>
-  </header>
-  <main class="container">
+  {% set uid = request.session.get('user_id') %}
+<header class="topbar">
+<a class="brand" href="{% if uid %}/bikes{% else %}/{% endif %}"><span class="brand__glyph">🚲</span> Bike Garage</a>
+<nav>
+  {% if uid %}
+<a href="/bikes" {% if path.startswith("/bikes") %}aria-current="page"{% endif %}>My bikes</a><a href="/overlay">Compare</a><a href="/gearing">Gearing</a> <a href="/profile">Profile</a>
+  {% endif %}
+<a href="/support" {% if path.startswith("/support") %}aria-current="page"{% endif %}>Support</a>
+  {% if uid %}
+<form action="/logout" method="post" class="inline">
+<button type="submit" class="linkbtn">Log out</button>
+</form>
+  {% else %}
+<a href="/login">Log in</a>
+  {% endif %}
+</nav>
+</header>
+<main class="container">
     {% block content %}{% endblock %}
-  </main>
-  <footer class="foot"><span>Bike Garage — geometry &amp; fit, in mm - Latest Build 09-25-26</span><span>Coded and Designed by J Siegrist</span></footer>
+</main>
+<footer class="foot"><span>Bike Garage — geometry &amp; fit, in mm - Latest Build v0.0.03 10-09</span><span>Coded and Designed by J Siegrist</span></footer>
 </body>
 </html>

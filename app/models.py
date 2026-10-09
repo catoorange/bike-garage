@@ -155,3 +155,15 @@ class Photo(Base):
     stored_name: Mapped[str] = mapped_column(String)                  # uuid4hex.ext — NEVER trust original name
     orig_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)   # for display only
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[Optional[str]]                 # optional, whatever they typed
+    email: Mapped[Optional[str]]                # optional reply address
+    topic: Mapped[Optional[str]]                # question | bug | other
+    body: Mapped[str]                           # required -> NOT NULL
+    page: Mapped[Optional[str]]                 # referer, captured server-side
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)

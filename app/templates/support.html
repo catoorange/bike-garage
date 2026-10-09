@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Support — Bike Garage{% endblock %}
+{% block content %}
+<section style="max-width:760px;margin:24px auto;font-family:system-ui">
+<h2 style="letter-spacing:.5px">🛠️ Using Bike Garage</h2>
+<p style="color:#8b8fa3;font-size:14px;line-height:1.6">
+Bike Garage stores your frame geometry, draws your bikes to scale, and lets you compare
+them side by side. Everything below works in any browser, on any device. (although it is under development so ymmv)</p>
+
+<h3>Getting started</h3>
+<p style="font-size:14px;line-height:1.6">Create an account, then open <b>Profile</b> and enter
+your measurements. These drive the rider figure in the fit overlay — if you skip this, the rider
+will look wrong. You only need to do it once.</p>
+
+<h3>Adding a bike</h3>
+<p style="font-size:14px;line-height:1.6"><b>My bikes → Add bike.</b> Choosing a preset fills in
+the geometry for you; you can correct any number afterwards. The fields that actually change the
+drawing are head tube angle and length, reach, stack, chainstay length, and wheel size. The rest
+are nice to have. Crank length and angle live in your profile and apply to every bike.</p>
+
+<h3>Comparing bikes</h3>
+<p style="font-size:14px;line-height:1.6"><b>Compare</b> overlays two bikes at once. One draws
+solid, the other as a ghost, so you can see exactly where they differ — usually the front end.
+The rider figure follows your profile, so you can judge how a different frame would actually
+sit.</p>
+
+<h3>Gearing</h3>
+<p style="font-size:14px;line-height:1.6"><b>Gearing</b> calculates speed at a given cadence for
+your chainrings and cassette. Fill in one or two front rings and your cogs, biggest first. Blank
+fields use sensible defaults. The km/h / mph choice is remembered on your profile.</p>
+
+<h3>Photos</h3>
+<p style="font-size:14px;line-height:1.6">Add photos to any bike — the first one becomes the
+thumbnail on your bike list. You can also set a profile picture. jpg, png, webp or gif, up to
+5&nbsp;MB each.</p>
+
+<h2 style="letter-spacing:.5px;margin-top:38px">💬 Questions &amp; bug reports</h2>
+<p style="color:#8b8fa3;font-size:14px;line-height:1.6">
+Something confusing, or not behaving the way you expect? Send it here and I'll take a look.
+Tell me which page you were on, what you did, and what you expected to happen instead — a
+screenshot helps more than you'd think. Your email is optional, but I can't write back without it.</p>
+
+{% if sent %}
+<p style="background:#12261c;border:1px solid #1f4d33;color:#7ee2a8;border-radius:10px;
+          padding:12px 14px;font-size:14px">Got it — thanks for taking the time to write that up.</p>
+{% elif err %}
+<p style="background:#2a1417;border:1px solid #5c2430;color:#f0a3ae;border-radius:10px;
+          padding:12px 14px;font-size:14px">That came through empty — add a message and try again.</p>
+{% endif %}
+
+<form method="post" action="/support" style="margin-top:14px;display:flex;
+      flex-direction:column;gap:12px;max-width:560px">
+
+  <div style="position:absolute;left:-9999px" aria-hidden="true">
+    <label>Leave this empty<input name="hp" type="text" tabindex="-1"
+           autocomplete="off"></label>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <label style="font-size:12px;flex:1;min-width:150px">Name
+      <input name="name" type="text" maxlength="80" placeholder="optional"
+             style="width:100%;padding:8px 10px;margin-top:4px;background:#15171d;
+                    border:1px solid #2a2d35;border-radius:8px;color:#e6e7eb"></label>
+    <label style="font-size:12px;flex:1;min-width:150px">Email
+      <input name="email" type="email" maxlength="120" placeholder="optional"
+             style="width:100%;padding:8px 10px;margin-top:4px;background:#15171d;
+                    border:1px solid #2a2d35;border-radius:8px;color:#e6e7eb"></label>
+  </div>
+
+  <label style="font-size:12px">This is about
+    <select name="topic" style="display:block;padding:8px 10px;margin-top:4px;
+           background:#15171d;border:1px solid #2a2d35;border-radius:8px;color:#e6e7eb">
+      <option value="question">A question</option>
+      <option value="bug">Something broken</option>
+      <option value="other">Something else</option>
+    </select></label>
+
+  <label style="font-size:12px">Message
+    <textarea name="body" required rows="6" maxlength="4000"
+      placeholder="What were you doing, and what happened?"
+      style="width:100%;padding:8px 10px;margin-top:4px;background:#15171d;
+             border:1px solid #2a2d35;border-radius:8px;color:#e6e7eb;
+             font-family:inherit;font-size:14px"></textarea></label>
+
+  <button type="submit" style="background:#7c3aed;color:#fff;border:0;border-radius:8px;
+          padding:9px 18px;cursor:pointer;align-self:flex-start">Send</button>
+</form>
+
+<p style="font-size:12px;color:#666;margin-top:26px">
+All measurements are stored in millimetres and degrees. Angles are in degrees from horizontal.</p>
+</section>
+{% endblock %}

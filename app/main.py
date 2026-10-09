@@ -452,3 +452,35 @@ def delete_photo(photo_id: int, request: Request,                       # FIX F:
     if p:
         (UPLOAD_DIR / p.kind / p.stored_name).unlink(missing_ok=True); db.delete(p); db.commit()
     return RedirectResponse(url=back, status_code=303)
+
+#--added 10-9 -- support page
+@app.get("/support")
+def support(request: Request):
+    return templates.TemplateResponse(request, "support.html", {
+        "sent": request.query_params.get("sent") == "1",
+        "err": request.query_params.get("err") == "1",
+    })
+
+
+@app.post("/support")
+def support_send(request: Request,
+                 name: str | None = Form(None),
+                 email: str | None = Form(None),
+                 topic: str | None = Form(None),
+                 body: str | None = Form(None),
+                 hp: str | None = Form(None),
+                 db: Session = Depends(get_db)):
+    if hp:                                     # honeypot filled = bot
+        return RedirectResponse(url="/support?sent=1", status_code=303)
+    text = (body or "").strip()
+    if not text:
+        return RedirectResponse(url="/support?err=1", status_code=303)
+    db.add(Message(
+        name=(name or "").strip()[:80] or None,
+        email=(email or "").strip()[:120] or None,
+        topic=(topic or "other").strip()[:20],
+        body=text[:4000],
+        page=(request.headers.get("referer") or "")[:200] or None,
+    ))
+    db.commit()
+    return RedirectResponse(url="/support?sent=1", status_code=303)
